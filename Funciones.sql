@@ -11,6 +11,8 @@ BEGIN
 	OPEN Rcursor FOR
 	SELECT *
 	FROM Articulo
+	Join LibroGeneral 
+	ON LibroGeneral.IDGENERAL = Articulo.IDGENERAL
 	WHERE TipArt = (SELECT Codigo FROM CatTipoArt WHERE TipArt = 'Libro')
 	ORDER BY TITULO;
 	RETURN Rcursor;
@@ -29,6 +31,8 @@ BEGIN
 	OPEN Rcursor FOR
 	SELECT *
 	FROM Articulo
+	Join LibroGeneral 
+	ON LibroGeneral.IDGENERAL = Articulo.IDGENERAL
 	WHERE TipArt = (SELECT Codigo FROM CatTipoArt WHERE TipArt = 'Libro') AND Titulo = TituloFunc
 	ORDER BY TITULO;
 	RETURN Rcursor;
@@ -47,6 +51,8 @@ BEGIN
 	OPEN Rcursor FOR
 	SELECT *
 	FROM Articulo
+	Join LibroGeneral 
+	ON LibroGeneral.IDGENERAL = Articulo.IDGENERAL
 	WHERE IDGENERAL =(SELECT IDGENERAL FROM LibroGeneral WHERE Editorial = EditorialFunc) AND
 	TipArt = (SELECT Codigo FROM CatTipoArt WHERE TipArt = 'Libro')
 	ORDER BY TITULO;
@@ -66,6 +72,8 @@ BEGIN
 	OPEN Rcursor FOR
 	SELECT *
 	FROM Articulo
+	Join LibroGeneral 
+	ON LibroGeneral.IDGENERAL = Articulo.IDGENERAL
 	WHERE IDGENERAL =(SELECT IDGENERAL FROM Autor WHERE Autor = AutorFunc) AND
 	TipArt = (SELECT Codigo FROM CatTipoArt WHERE TipArt = 'Libro')
 	ORDER BY TITULO;
@@ -86,7 +94,9 @@ BEGIN
 	OPEN Rcursor FOR
 	SELECT *
 	FROM Articulo
-	WHERE Ocupado = 0 AND
+	Join LibroGeneral 
+	ON LibroGeneral.IDGENERAL = Articulo.IDGENERAL
+	WHERE IDGENERAL = (SELECT IDGENERAL from ArtPrest WHERE PoseeArt = 1) AND
 	TipArt = (SELECT Codigo FROM CatTipoArt WHERE TipArt = 'Libro')
 	ORDER BY TITULO;
 	RETURN Rcursor;
@@ -103,12 +113,13 @@ RETURN types.cursorType
 AS 
 Rcursor types.cursorType;
 BEGIN
-	OPEN Rcursor FOR
+	OPEN Rcursor FOR -- Maybe using a second cursor in order to iterate through it looking for all persons 
 	SELECT *
 	FROM Articulo
-	WHERE Ocupado = 1 AND 
-	TipArt = (SELECT Codigo FROM CatTipoArt WHERE TipArt = 'Libro') AND 
-	IDGENERAL = (select IDGENERAL FROM ArtPrest WHERE IDPersona = (SELECT IDPERSONA FROM Persona WHERE Nombre = NombreP))
+	Join LibroGeneral 
+	ON LibroGeneral.IDGENERAL = Articulo.IDGENERAL
+	WHERE IDGENERAL = (SELECT IDGENERAL from ArtPrest WHERE PoseeArt = 1 AND IDPersona = (SELECT IDPERSONA FROM Persona WHERE Nombre = NombreP)) AND
+	TipArt = (SELECT Codigo FROM CatTipoArt WHERE TipArt = 'Libro')
 	ORDER BY TITULO;
 	RETURN Rcursor;
 END Consulta_L_Prestados;
@@ -168,4 +179,71 @@ END Consulta_P_n_veces_en_m;
 --exec :LibrosP := Consulta_P_n_veces_en_m();
 --print LibrosP;
 
+CREATE or REPLACE Function Tipo_per(Tipoper VARCHAR) --Devuelve el Codigo del tipo de persona 
+RETURN int
+AS 
+CodigoPer int;
+BEGIN
+	SELECT Codigo INTO CodigoPer FROM CatTipoPer WHERE TipPer = Tipoper;
+	RETURN CodigoPer;
+END Tipo_per;
+
+--El test de la funcion anterior
+--declare 
+--Codigy int;
+--begin
+--Codigy := Tipo_per('Familiar');
+--DBMS_OUTPUT.PUT_LINE('Codigo '|| Codigy);
+--end;
+
+CREATE or REPLACE Function Tipo_Art(TipoArti VARCHAR) --Devuelve el Codigo del tipo de Articulo 
+RETURN int
+AS 
+CodigoArt int;
+BEGIN
+	SELECT Codigo INTO CodigoArt FROM CatTipoArt WHERE TipArt = TipoArti;
+	RETURN CodigoArt;
+END Tipo_Art;
+
+--El test de la funcion anterior
+--declare 
+--Codigy int;
+--begin
+--Codigy := Tipo_Art('Familiar');
+--DBMS_OUTPUT.PUT_LINE('Codigo '|| Codigy);
+--end;
+
+CREATE or REPLACE Function Tipo_Tel(TipoTel VARCHAR) --Devuelve el Codigo del tipo de Articulo 
+RETURN int
+AS 
+CodigoTel int;
+BEGIN
+	SELECT Codigo INTO CodigoTel FROM CatTTel WHERE TipTel = TipoTel;
+	RETURN CodigoTel;
+END Tipo_Tel;
+
+--El test de la funcion anterior
+--declare 
+--Codigy int;
+--begin
+--Codigy := Tipo_Art('Familiar');
+--DBMS_OUTPUT.PUT_LINE('Codigo '|| Codigy);
+--end;
+
+CREATE or REPLACE Function Tipo_Param(TipoParam VARCHAR) --Devuelve el Codigo del tipo de Articulo 
+RETURN int
+AS 
+CodigoParam int;
+BEGIN
+	SELECT Valor INTO CodigoParam FROM Parametros WHERE NomParam = TipoParam;
+	RETURN CodigoParam;
+END Tipo_Param;
+
+--El test de la funcion anterior
+--declare 
+--Codigy int;
+--begin
+--Codigy := Tipo_Param('Familiar');
+--DBMS_OUTPUT.PUT_LINE('Codigo '|| Codigy);
+--end;
 --#############################################################################################################
